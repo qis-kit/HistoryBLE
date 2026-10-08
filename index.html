@@ -187,9 +187,10 @@
     connectBtn.addEventListener('click', async () => {
 		if (bleDevice && bleDevice.gatt.connected) 
 		{
-                statusText.innerText = "Disconnect";
-                bleDevice.gatt.disconnect();
-                return; // abort function
+            statusText.innerText = "Disconnected";
+            bleDevice.gatt.disconnect();
+			connectBtn.textContent = "Connect";
+            return; // abort function
 		}
 
 		try {
