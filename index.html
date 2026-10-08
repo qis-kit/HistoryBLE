@@ -185,7 +185,14 @@
 
     // Establish connection via web-BLE-API
     connectBtn.addEventListener('click', async () => {
-        try {
+		if (bleDevice && bleDevice.gatt.connected) 
+		{
+                statusText.innerText = "Disconnect";
+                bleDevice.gatt.disconnect();
+                return; // abort function
+		}
+
+		try {
             updateStatus("Searching for ESP32 device...", "status-disconnected");
             
             // Request BLE device
