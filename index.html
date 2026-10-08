@@ -11,6 +11,7 @@
             --text-color: #333333;
             --primary: #007bff;
             --success: #28a745;
+			--normal: #909090;
             --danger: #dc3545;
         }
         body {
@@ -107,6 +108,7 @@
         }
         .btn-primary { background-color: var(--primary); color: white; }
         .btn-success { background-color: var(--success); color: white; }
+		.btn-normal { background-color: var(--normal); color: white; }
         .btn-danger { background-color: var(--danger); color: white; }
         
         .input-group {
@@ -148,8 +150,8 @@
     <div class="controls">
         <h2>Command</h2>
         <div class="btn-group">
-            <button id="ledOnBtn" class="btn-success" disabled>LED Ein</button>
-            <button id="ledOffBtn" class="btn-danger" disabled>LED Aus</button>
+            <button id="command1Btn" class="btn-normal" disabled>Command 1</button>
+            <button id="command2Btn" class="btn-normal" disabled>Command 2</button>
         </div>
 
         <h2>Send interval</h2>
@@ -176,15 +178,15 @@
     const tempTxt = document.getElementById('tempValue');
     const humTxt = document.getElementById('humValue');
     
-    const ledOnBtn = document.getElementById('ledOnBtn');
-    const ledOffBtn = document.getElementById('ledOffBtn');
+    const command1Btn = document.getElementById('command1Btn');
+    const command2Btn = document.getElementById('command2Btn');
     const intervalInput = document.getElementById('intervalInput');
     const setIntervalBtn = document.getElementById('setIntervalBtn');
 
     // Establish connection via web-BLE-API
     connectBtn.addEventListener('click', async () => {
         try {
-            updateStatus("Search for ESP32 device...", "status-disconnected");
+            updateStatus("Searching for ESP32 device...", "status-disconnected");
             
             // Request BLE device
             bleDevice = await navigator.bluetooth.requestDevice({
@@ -247,8 +249,8 @@
     }
 
     // Button events
-    ledOnBtn.addEventListener('click', () => sendCommand("LED_ON"));
-    ledOffBtn.addEventListener('click', () => sendCommand("LED_OFF"));
+    command1Btn.addEventListener('click', () => sendCommand("Command 1"));
+    command2Btn.addEventListener('click', () => sendCommand("Command 2"));
     
     setIntervalBtn.addEventListener('click', () => {
         const ms = intervalInput.value;
@@ -267,8 +269,8 @@
 
     // Toggle UI-elements
     function setUIState(connected) {
-        ledOnBtn.disabled = !connected;
-        ledOffBtn.disabled = !connected;
+        command1Btn.disabled = !connected;
+        command2Btn.disabled = !connected;
         intervalInput.disabled = !connected;
         setIntervalBtn.disabled = !connected;
         connectBtn.disabled = connected;
