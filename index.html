@@ -280,7 +280,8 @@
         command2Btn.disabled = !connected;
         intervalInput.disabled = !connected;
         setIntervalBtn.disabled = !connected;
-        connectBtn.disabled = connected;
+        //connectBtn.disabled = connected;
+		connectBtn.textContent = "Disconnect";
         
         if (!connected) {
             tempTxt.textContent = "-- °C";
