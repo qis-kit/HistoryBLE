@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>ESP32 BLE Web Client</title>
+</head>
+<body>
+    <h1>ESP32 Web Bluetooth Controller</h1>
+    <button id="connectBtn">connect</button>
+    <button id="ledBtn" disabled>action</button>
+    <p>Status: <span id="status">disconnected</span></p>
+    <p>Sensor: <span id="sensorValue">--</span></p>
+
+    <script>
+        // UUID generator: https://www.uuidgenerator.net/version4 , to be used in ESP32-Code!
+        const SERVICE_UUID = "414d2d12-4749-4e19-b6be-4505d18fa7ec";
+        const CHARACTERISTIC_UUID = "7b5afdf9-73f5-494b-a03e-ce396d331f44";
+
+        let bleDevice = null;
+        let bleCharacteristic = null;
+        let ledState = false;
+
+        const connectBtn = document.getElementById('connectBtn');
+        const ledBtn = document.getElementById('ledBtn');
+        const statusTxt = document.getElementById('status');
+        const sensorTxt = document.getElementById('sensorValue');
+
+        // 1. Setup connection (has to be initiated by user interaction)
+        connectBtn.addEventListener('click', async () => 
+		{
+            try 
+			{
+                statusTxt.textContent = "Searching for devices...";
+                
+                // filter for service
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: [SERVICE_UUID] }]
+                });
+
+                statusTxt.textContent = "Connect with GATT-Server...";
+                const server = await bleDevice.gatt.connect();
+
+                statusTxt.textContent = "Suche Service...";
+                const service = await server.getPrimaryService(SERVICE_UUID);
+
+                statusTxt.textContent = "Search for characteristic...";
+                bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+                statusTxt.textContent = "Connected!";
+                ledBtn.disabled = false;
+
+                // 2. Activate notifications for incoming messages
+                await bleCharacteristic.startNotifications();
+                bleCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
+                    const value = new TextDecoder().decode(event.target.value);
+                    sensorTxt.textContent = value;
+                });
+
+            } catch (error) {
+                console.error("BLE Error:", error);
+                statusTxt.textContent = "Connection failed, error: " + error.message;
+            }
+        });
+
+        // 3. Send data to ESP32
+        ledBtn.addEventListener('click', async () => {
+            if (!bleCharacteristic) return;
+            
+            ledState = !ledState;
+            const command = ledState ? "1" : "0";
+            const encoder = new TextEncoder();
+            
+            try 
+			{
+                await bleCharacteristic.writeValue(encoder.encode(command));
+                console.log("Command sent: " + command);
+            } catch (error) {
+                console.error("Error when sending:", error);
+            }
+        });
+    </script>
+</body>
+</html>
