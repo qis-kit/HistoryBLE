@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History Dashboard</title>
+    <title>History@IBM Dashboard</title>
     <style>
         :root {
             --bg-color: #f4f7f6;
@@ -126,7 +126,7 @@
 <body>
 
 <div class="container">
-    <h1>History Dashboard</h1>
+    <h1>History@IBM Dashboard</h1>
     
     <div class="status-bar">
         Status: <span id="status" class="status-disconnected">Not connected</span>
@@ -223,12 +223,12 @@
             cmdCharacteristic = await service.getCharacteristic(CMD_CHARACTERISTIC_UUID);
 
             // Enable GUI for interaktion
-            updateStatus("Connection successful", "status-connected");
+            updateStatus("Connected", "status-connected");
             setUIState(true);
 
         } catch (error) {
-            console.error("BLE Fehler:", error);
-            updateStatus("Fehler: " + error.message, "status-disconnected");
+            console.error("BLE Error:", error);
+            updateStatus("Error: " + error.message, "status-disconnected");
             setUIState(false);
         }
     });
