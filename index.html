@@ -9,9 +9,9 @@
             --bg-color: #f4f7f6;
             --card-bg: #ffffff;
             --text-color: #333333;
-            --primary: #007bff;
+            --connect: #0062C6;
             --success: #28a745;
-			--normal: #909090;
+			--normal: #2E8BEA;
             --danger: #dc3545;
         }
         body {
@@ -106,7 +106,7 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
-        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-connect { background-color: var(--connect); color: white; }
         .btn-success { background-color: var(--success); color: white; }
 		.btn-normal { background-color: var(--normal); color: white; }
         .btn-danger { background-color: var(--danger); color: white; }
@@ -134,7 +134,7 @@
         Status: <span id="status" class="status-disconnected">Not connected</span>
     </div>
     
-    <button id="connectBtn" class="btn-primary" style="margin-bottom: 20px; width: 100%;">Connect</button>
+    <button id="connectBtn" class="btn-connect" style="margin-bottom: 20px; width: 100%;">Connect</button>
 
     <div class="grid">
         <div class="card">
@@ -148,16 +148,16 @@
     </div>
 
     <div class="controls">
-        <h2>Command</h2>
+        <h2>Commands</h2>
         <div class="btn-group">
             <button id="command1Btn" class="btn-normal" disabled>Command 1</button>
             <button id="command2Btn" class="btn-normal" disabled>Command 2</button>
         </div>
 
-        <h2>Send interval</h2>
+        <h2>Data input</h2>
         <div class="input-group">
-            <input type="number" id="intervalInput" value="3000" min="500" step="500" placeholder="Zeit in ms" disabled>
-            <button id="setIntervalBtn" class="btn-primary" style="flex: 0 0 auto;" disabled>Apply</button>
+            <input type="number" id="intervalInput" value="0" min="500" step="500" placeholder="Zeit in ms" disabled>
+            <button id="setIntervalBtn" class="btn-normal" style="flex: 0 0 auto;" disabled>Apply</button>
         </div>
     </div>
 </div>
@@ -171,6 +171,7 @@
 
     let bleDevice = null;
     let cmdCharacteristic = null;
+	let isConnected = false;
 
     // DOM-Elements
     const connectBtn = document.getElementById('connectBtn');
@@ -185,11 +186,23 @@
 
     // Establish connection via web-BLE-API
     connectBtn.addEventListener('click', async () => {
-		if (bleDevice && bleDevice.gatt.connected) 
+		if (bleDevice && isConnected) 
 		{
-            statusText.innerText = "Disconnected";
-            bleDevice.gatt.disconnect();
-			connectBtn.textContent = "Connect";
+			updateStatus("Disconnecting...", "status-disconnected");
+			try 
+			{
+				await bleDevice.gatt.disconnect();
+				connectBtn.textContent = "Connect";
+				updateStatus("Disconnected", "status-disconnected");
+				isConnected = false;
+				
+				//onDisconnected(); 
+			} 
+			catch (err) 
+			{
+				alert("disconnect failed");
+				//console.error("Disconnect fehlgeschlagen:", err);
+			}
             return; // abort function
 		}
 
@@ -233,6 +246,7 @@
             cmdCharacteristic = await service.getCharacteristic(CMD_CHARACTERISTIC_UUID);
 
             // Enable GUI for interaktion
+			isConnected = true;
             updateStatus("Connected", "status-connected");
             setUIState(true);
 
@@ -294,6 +308,7 @@
     // Connection lost handler
     function onDisconnected() {
         updateStatus("Connection lost!", "status-disconnected");
+		isConnected = false;
         setUIState(false);
     }
 </script>
