@@ -2,82 +2,288 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>ESP32 BLE Web Client</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --primary: #007bff;
+            --success: #28a745;
+            --danger: #dc3545;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .status-bar {
+            background-color: var(--card-bg);
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .status-disconnected { color: var(--danger); }
+        .status-connected { color: var(--success); }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .card h3 {
+            margin: 0 0 10px 0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .controls {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .controls h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        input[type="number"] {
+            flex: 1;
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+    </style>
 </head>
 <body>
-    <h1>ESP32 Web Bluetooth Controller</h1>
-    <button id="connectBtn">connect</button>
-    <button id="ledBtn" disabled>action</button>
-    <p>Status: <span id="status">disconnected</span></p>
-    <p>Sensor: <span id="sensorValue">--</span></p>
 
-    <script>
-        // UUID generator: https://www.uuidgenerator.net/version4 , to be used in ESP32-Code!
-        const SERVICE_UUID = "414d2d12-4749-4e19-b6be-4505d18fa7ec";
-        const CHARACTERISTIC_UUID = "7b5afdf9-73f5-494b-a03e-ce396d331f44";
+<div class="container">
+    <h1>History Dashboard</h1>
+    
+    <div class="status-bar">
+        Status: <span id="status" class="status-disconnected">Not connected</span>
+    </div>
+    
+    <button id="connectBtn" class="btn-primary" style="margin-bottom: 20px; width: 100%;">Connect</button>
 
-        let bleDevice = null;
-        let bleCharacteristic = null;
-        let ledState = false;
+    <div class="grid">
+        <div class="card">
+            <h3>Temperature</h3>
+            <div id="tempValue" class="value">-- °C</div>
+        </div>
+        <div class="card">
+            <h3>Humidity</h3>
+            <div id="humValue" class="value">-- %</div>
+        </div>
+    </div>
 
-        const connectBtn = document.getElementById('connectBtn');
-        const ledBtn = document.getElementById('ledBtn');
-        const statusTxt = document.getElementById('status');
-        const sensorTxt = document.getElementById('sensorValue');
+    <div class="controls">
+        <h2>Command</h2>
+        <div class="btn-group">
+            <button id="ledOnBtn" class="btn-success" disabled>LED Ein</button>
+            <button id="ledOffBtn" class="btn-danger" disabled>LED Aus</button>
+        </div>
 
-        // 1. Setup connection (has to be initiated by user interaction)
-        connectBtn.addEventListener('click', async () => 
-		{
-            try 
-			{
-                statusTxt.textContent = "Searching for devices...";
-                
-                // filter for service
-                bleDevice = await navigator.bluetooth.requestDevice({
-                    filters: [{ services: [SERVICE_UUID] }]
-                });
+        <h2>Send interval</h2>
+        <div class="input-group">
+            <input type="number" id="intervalInput" value="3000" min="500" step="500" placeholder="Zeit in ms" disabled>
+            <button id="setIntervalBtn" class="btn-primary" style="flex: 0 0 auto;" disabled>Apply</button>
+        </div>
+    </div>
+</div>
 
-                statusTxt.textContent = "Connect with GATT-Server...";
-                const server = await bleDevice.gatt.connect();
+<script>
+    // UUID-Configuration 
+    const SERVICE_UUID             = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+    const TEMP_CHARACTERISTIC_UUID   = "e3238001-9cd0-423c-a9df-6486eb733a1e";
+    const HUM_CHARACTERISTIC_UUID    = "a5198002-9cd0-423c-a9df-6486eb733a1e";
+    const CMD_CHARACTERISTIC_UUID    = "c8478003-9cd0-423c-a9df-6486eb733a1e";
 
-                statusTxt.textContent = "Suche Service...";
-                const service = await server.getPrimaryService(SERVICE_UUID);
+    let bleDevice = null;
+    let cmdCharacteristic = null;
 
-                statusTxt.textContent = "Search for characteristic...";
-                bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+    // DOM-Elements
+    const connectBtn = document.getElementById('connectBtn');
+    const statusTxt = document.getElementById('status');
+    const tempTxt = document.getElementById('tempValue');
+    const humTxt = document.getElementById('humValue');
+    
+    const ledOnBtn = document.getElementById('ledOnBtn');
+    const ledOffBtn = document.getElementById('ledOffBtn');
+    const intervalInput = document.getElementById('intervalInput');
+    const setIntervalBtn = document.getElementById('setIntervalBtn');
 
-                statusTxt.textContent = "Connected!";
-                ledBtn.disabled = false;
-
-                // 2. Activate notifications for incoming messages
-                await bleCharacteristic.startNotifications();
-                bleCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
-                    const value = new TextDecoder().decode(event.target.value);
-                    sensorTxt.textContent = value;
-                });
-
-            } catch (error) {
-                console.error("BLE Error:", error);
-                statusTxt.textContent = "Connection failed, error: " + error.message;
-            }
-        });
-
-        // 3. Send data to ESP32
-        ledBtn.addEventListener('click', async () => {
-            if (!bleCharacteristic) return;
+    // Establish connection via web-BLE-API
+    connectBtn.addEventListener('click', async () => {
+        try {
+            updateStatus("Search for ESP32 device...", "status-disconnected");
             
-            ledState = !ledState;
-            const command = ledState ? "1" : "0";
+            // Request BLE device
+            bleDevice = await navigator.bluetooth.requestDevice({
+                filters: [{ services: [SERVICE_UUID] }]
+            });
+
+            // Register event for connection drop
+            bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+            updateStatus("Connecting with server...", "status-disconnected");
+            const server = await bleDevice.gatt.connect();
+
+            updateStatus("Searching for main service...", "status-disconnected");
+            const service = await server.getPrimaryService(SERVICE_UUID);
+
+            // Subscribe for temperatur channel
+            updateStatus("Connect temperature channel...", "status-disconnected");
+            const tempChar = await service.getCharacteristic(TEMP_CHARACTERISTIC_UUID);
+            await tempChar.startNotifications();
+            tempChar.addEventListener('characteristicvaluechanged', (event) => {
+                const value = new TextDecoder().decode(event.target.value);
+                tempTxt.textContent = value + " °C";
+            });
+
+            // Subscribe to humidity channel
+            updateStatus("Connect humidity channel...", "status-disconnected");
+            const humChar = await service.getCharacteristic(HUM_CHARACTERISTIC_UUID);
+            await humChar.startNotifications();
+            humChar.addEventListener('characteristicvaluechanged', (event) => {
+                const value = new TextDecoder().decode(event.target.value);
+                humTxt.textContent = value + " %";
+            });
+
+            // Get command channel
+            updateStatus("Connect command channel...", "status-disconnected");
+            cmdCharacteristic = await service.getCharacteristic(CMD_CHARACTERISTIC_UUID);
+
+            // Enable GUI for interaktion
+            updateStatus("Connection successful", "status-connected");
+            setUIState(true);
+
+        } catch (error) {
+            console.error("BLE Fehler:", error);
+            updateStatus("Fehler: " + error.message, "status-disconnected");
+            setUIState(false);
+        }
+    });
+
+    // Send text-based commands via web-bluetooth
+    async function sendCommand(commandText) {
+        if (!cmdCharacteristic) return;
+        try {
             const encoder = new TextEncoder();
-            
-            try 
-			{
-                await bleCharacteristic.writeValue(encoder.encode(command));
-                console.log("Command sent: " + command);
-            } catch (error) {
-                console.error("Error when sending:", error);
-            }
-        });
-    </script>
+            await cmdCharacteristic.writeValue(encoder.encode(commandText));
+            console.log("Command sent: " + commandText);
+        } catch (error) {
+            console.error("Error during send:", error);
+            alert("Command could not be sent. Check connection status!");
+        }
+    }
+
+    // Button events
+    ledOnBtn.addEventListener('click', () => sendCommand("LED_ON"));
+    ledOffBtn.addEventListener('click', () => sendCommand("LED_OFF"));
+    
+    setIntervalBtn.addEventListener('click', () => {
+        const ms = intervalInput.value;
+        if (ms >= 500) {
+            sendCommand("INT_" + ms);
+        } else {
+            alert("Das Intervall muss mindestens 500 ms betragen!");
+        }
+    });
+
+    // Switch status display
+    function updateStatus(text, className) {
+        statusTxt.textContent = text;
+        statusTxt.className = className;
+    }
+
+    // Toggle UI-elements
+    function setUIState(connected) {
+        ledOnBtn.disabled = !connected;
+        ledOffBtn.disabled = !connected;
+        intervalInput.disabled = !connected;
+        setIntervalBtn.disabled = !connected;
+        connectBtn.disabled = connected;
+        
+        if (!connected) {
+            tempTxt.textContent = "-- °C";
+            humTxt.textContent = "-- %";
+        }
+    }
+
+    // Connection lost handler
+    function onDisconnected() {
+        updateStatus("Connection lost!", "status-disconnected");
+        setUIState(false);
+    }
+</script>
 </body>
 </html>
