@@ -2,14 +2,15 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History@IBM Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.85">
+    <title>Dashboard</title>
     <style>
         :root {
             --bg-color: #f4f7f6;
             --card-bg: #ffffff;
             --text-color: #333333;
             --connect: #0062C6;
+			--disconnect: #ff62C6;
             --success: #28a745;
 			--normal: #2E8BEA;
             --danger: #dc3545;
@@ -43,8 +44,18 @@
             margin-bottom: 20px;
             font-weight: 500;
         }
+		.command-bar {
+            background-color: var(--card-bg);
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
         .status-disconnected { color: var(--danger); }
         .status-connected { color: var(--success); }
+		.time { color: #000000; }
         
         .grid {
             display: grid;
@@ -52,9 +63,37 @@
             gap: 15px;
             margin-bottom: 20px;
         }
+		.connect-panel {
+			background: linear-gradient(135deg, rgba(150,150,255,1) 10%, rgba(200,200,255,1) 20%, rgba(255,255,255,1) 85%, rgba(120,120,255,1) 100%);
+			border-radius: 12px;
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+			margin-top: 20px;
+			padding-top: 15px;
+			padding-left: 15px;
+			padding-right: 15px;
+			border: 1px solid gray;
+			box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+		.button-panel {
+			border-radius: 8px;
+            display: grid;
+			height: 40px;
+            grid-template-columns: 2fr 3fr;
+            gap: 15px;
+            margin-bottom: 10px;
+			margin-top: 10px;
+			padding-top: 12px;
+			padding-left: 10px;
+			padding-right: 10px;
+			border: 1px solid gray;
+			box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
         .card {
             background-color: var(--card-bg);
-            padding: 20px;
+            padding: 10px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             text-align: center;
@@ -71,13 +110,18 @@
             font-weight: bold;
             color: #2c3e50;
         }
+		.time {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
         
         .controls {
             background-color: var(--card-bg);
-            padding: 20px;
+            padding: 5px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         .controls h2 {
             margin-top: 0;
@@ -88,19 +132,38 @@
             margin-bottom: 15px;
         }
         .btn-group {
-            display: flex;
+            display: inline;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         button {
             flex: 1;
-            padding: 12px;
-            font-size: 1rem;
+            padding: 10px;
+            font-size: 1.0rem;
             font-weight: 600;
             border: none;
             border-radius: 8px;
             cursor: pointer;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.7);
             transition: background 0.2s, opacity 0.2s;
+        }
+		.command-button {
+            flex: 1;
+			height: 30px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.7);
+            transition: background 0.2s, opacity 0.2s;
+        }
+		.command-label {
+            height: 10px;
+			padding-top: 1px;
+			padding-left: 20px;
+			padding-bottom: 1px;
+			
         }
         button:disabled {
             opacity: 0.5;
@@ -123,18 +186,71 @@
             border-radius: 8px;
             box-sizing: border-box;
         }
+        .spin {
+            flex: 0 1 50%;
+            max-width: 50%;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .spin-btn {
+            flex: 0 0 44px;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            font-size: 1.4rem;
+            line-height: 1;
+        }
+        .spin input[type="number"] {
+            flex: 1;
+            min-width: 0;
+            height: 44px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        .spin input[type="number"]::-webkit-inner-spin-button,
+        .spin input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .spin-unit {
+            flex: 0 0 auto;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        .feedback {
+            margin: 8px 0 10px 0;
+            padding: 8px 10px;
+            background-color: #f4f7f6;
+            border-radius: 8px;
+            font-family: ui-monospace, Menlo, Consolas, monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .feedback b { color: #2c3e50; }
+        .fb-ok   { color: var(--success); }
+        .fb-warn { color: var(--danger); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>History@IBM Dashboard</h1>
+    <h1>Dashboard</h1>
     
-    <div class="status-bar">
-        Status: <span id="status" class="status-disconnected">Not connected</span>
-    </div>
-    
-    <button id="connectBtn" class="btn-connect" style="margin-bottom: 20px; width: 100%;">Connect</button>
+    <div class="connect-panel"> 
+		<div class="status-bar">
+			Status: <span id="status" class="status-disconnected">Not connected</span>
+		</div>
+		<button id="connectBtn" class="btn-connect" style="margin-bottom: 20px; width: 100%;">Connect</button>
+	</div>	
+	
+	<div class="card">
+        <h3>Time</h3>
+            <div id="timeValue" class="time"> --- </div>
+    </div><br>
 
     <div class="grid">
         <div class="card">
@@ -150,62 +266,108 @@
     <div class="controls">
         <h2>Commands</h2>
         <div class="btn-group">
-            <button id="command1Btn" class="btn-normal" disabled>Command 1</button>
-            <button id="command2Btn" class="btn-normal" disabled>Command 2</button>
+			<div class="button-panel"> 
+				<div id="oledStatus" class="command-label">OLED</div>
+				<button id="OLEDBtn" class="command-button btn-normal" style="margin-bottom: 10px; width: 100%;" disabled>ON</button>
+			</div>	
+            <!-- <button id="command1Btn" class="btn-normal" disabled>Command 1</button> -->
+            <!-- <button id="command2Btn" class="btn-normal" disabled>Command 2</button> -->
         </div>
 
-        <h2>Data input</h2>
+        <h2 style="margin-top: 30px;">Data input</h2>
         <div class="input-group">
             <input type="number" id="intervalInput" value="0" min="500" step="500" placeholder="Zeit in ms" disabled>
             <button id="setIntervalBtn" class="btn-normal" style="flex: 0 0 auto;" disabled>Apply</button>
+        </div>
+
+        <h2 style="margin-top: 20px;">BLE TX power</h2>
+        <div class="input-group">
+            <div class="spin">
+                <button id="txpDownBtn" class="spin-btn btn-normal" type="button" aria-label="Lower power" disabled>&minus;</button>
+                <input type="number" id="txpInput" value="0" min="-24" max="20" step="3" placeholder="dBm" disabled>
+                <button id="txpUpBtn" class="spin-btn btn-normal" type="button" aria-label="Raise power" disabled>+</button>
+                <span class="spin-unit">dBm</span>
+            </div>
+            <button id="txpApplyBtn" class="btn-normal" style="flex: 0 0 auto; margin-left: auto;" disabled>Apply</button>
+        </div>
+        <div class="feedback">
+            Selected: <b id="txpSelected">0 dBm</b><br>
+            Device:&nbsp;&nbsp;<b id="txpCurrent">unknown</b><br>
+            State:&nbsp;&nbsp;&nbsp;<span id="txpState">not connected</span>
         </div>
     </div>
 </div>
 
 <script>
     // UUID-Configuration 
-    const SERVICE_UUID             = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+    const SERVICE_UUID               = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+	const TIME_CHARACTERISTIC_UUID   = "a1238000-9cd0-423c-a9df-6486eb733a1e";
     const TEMP_CHARACTERISTIC_UUID   = "e3238001-9cd0-423c-a9df-6486eb733a1e";
     const HUM_CHARACTERISTIC_UUID    = "a5198002-9cd0-423c-a9df-6486eb733a1e";
+	const OLED_CHARACTERISTIC_UUID   = "a7177002-9cd0-423c-a9df-6486eb733a1e";
     const CMD_CHARACTERISTIC_UUID    = "c8478003-9cd0-423c-a9df-6486eb733a1e";
+	const TXP_CHARACTERISTIC_UUID    = "b9a28004-9cd0-423c-a9df-6486eb733a1e";   // TX power status (read + notify)
 
     let bleDevice = null;
     let cmdCharacteristic = null;
 	let isConnected = false;
+	let oledIsOn = false;
+
+	// TX power: the ESP32-S3 supports these hardware steps (dBm)
+	const TXP_LEVELS = [-24, -21, -18, -15, -12, -9, -6, -3, 0, 3, 6, 9, 12, 15, 18, 20];
+	let txpConfirmed = null;      // last value reported by the device
+	let txpPending = null;        // value sent but not yet confirmed
+	let txpTimer = null;
+	let txpHasFeedback = false;   // true if the firmware offers the TXP characteristic
+
 
     // DOM-Elements
     const connectBtn = document.getElementById('connectBtn');
     const statusTxt = document.getElementById('status');
+	const timeTxt = document.getElementById('timeValue');
     const tempTxt = document.getElementById('tempValue');
     const humTxt = document.getElementById('humValue');
     
-    const command1Btn = document.getElementById('command1Btn');
-    const command2Btn = document.getElementById('command2Btn');
+    const OLEDBtn = document.getElementById('OLEDBtn');
+    //const command2Btn = document.getElementById('command2Btn');
     const intervalInput = document.getElementById('intervalInput');
     const setIntervalBtn = document.getElementById('setIntervalBtn');
 
-    // Establish connection via web-BLE-API
+    const txpInput = document.getElementById('txpInput');
+    const txpApplyBtn = document.getElementById('txpApplyBtn');
+    const txpDownBtn = document.getElementById('txpDownBtn');
+    const txpUpBtn = document.getElementById('txpUpBtn');
+    const txpSelectedTxt = document.getElementById('txpSelected');
+    const txpCurrentTxt = document.getElementById('txpCurrent');
+    const txpStateTxt = document.getElementById('txpState');
+
+
+    // Establish connection via web-BLE-API OR disconnect
     connectBtn.addEventListener('click', async () => {
+		
+		//-----------------------------------------------------------------------------------------
+		// Disconnect ...
+		//-----------------------------------------------------------------------------------------
 		if (bleDevice && isConnected) 
 		{
 			updateStatus("Disconnecting...", "status-disconnected");
 			try 
 			{
 				await bleDevice.gatt.disconnect();
-				connectBtn.textContent = "Connect";
 				updateStatus("Disconnected", "status-disconnected");
 				isConnected = false;
-				
-				//onDisconnected(); 
+				setUIState(false);
 			} 
 			catch (err) 
 			{
 				alert("disconnect failed");
-				//console.error("Disconnect fehlgeschlagen:", err);
 			}
             return; // abort function
 		}
-
+		
+		//-----------------------------------------------------------------------------------------
+		// Connect ...
+		//-----------------------------------------------------------------------------------------
 		try {
             updateStatus("Searching for ESP32 device...", "status-disconnected");
             
@@ -223,7 +385,18 @@
             updateStatus("Searching for main service...", "status-disconnected");
             const service = await server.getPrimaryService(SERVICE_UUID);
 
-            // Subscribe for temperatur channel
+            
+			// Subscribe for local time channel
+            updateStatus("Connect time channel...", "status-disconnected");
+            const timeChar = await service.getCharacteristic(TIME_CHARACTERISTIC_UUID);
+            await timeChar.startNotifications();
+            timeChar.addEventListener('characteristicvaluechanged', (event) => {
+                const value = new TextDecoder().decode(event.target.value);
+                timeTxt.textContent = value;
+            });
+			
+			
+			// Subscribe for temperatur channel
             updateStatus("Connect temperature channel...", "status-disconnected");
             const tempChar = await service.getCharacteristic(TEMP_CHARACTERISTIC_UUID);
             await tempChar.startNotifications();
@@ -240,6 +413,51 @@
                 const value = new TextDecoder().decode(event.target.value);
                 humTxt.textContent = value + " %";
             });
+			
+			// Subscribe to OLED status channel
+            updateStatus("Connect oled channel...", "status-disconnected");
+            const oledChar = await service.getCharacteristic(OLED_CHARACTERISTIC_UUID);
+            await oledChar.startNotifications();
+            oledChar.addEventListener('characteristicvaluechanged', (event) => {
+                const value = new TextDecoder().decode(event.target.value);
+				if (value == "OLED_ON")
+				{
+					OLEDBtn.textContent = "OFF";
+					OLEDBtn.style.backgroundColor = "red";
+					oledIsOn = true;
+				}
+				if (value == "OLED_OFF")
+				{
+					OLEDBtn.textContent = "ON";
+					OLEDBtn.style.backgroundColor = "green";
+					oledIsOn = false;
+				}  
+            });
+
+			// Subscribe to TX power status channel (optional: older firmware may not have it)
+            updateStatus("Connect TX power channel...", "status-disconnected");
+            txpHasFeedback = false;
+            try 
+			{
+                const txpChar = await service.getCharacteristic(TXP_CHARACTERISTIC_UUID);
+                await txpChar.startNotifications();
+                txpChar.addEventListener('characteristicvaluechanged', (event) => {
+                    const value = new TextDecoder().decode(event.target.value);
+                    onTxPowerReported(parseInt(value, 10));
+                });
+                txpHasFeedback = true;
+                try 
+				{
+                    // Read the current value right away
+                    const initial = await txpChar.readValue();
+                    onTxPowerReported(parseInt(new TextDecoder().decode(initial), 10));
+                } 
+				catch (e) { /* read not supported: wait for first notification */ }
+            } 
+			catch (e) 
+			{
+                console.warn("No TX power characteristic on this firmware:", e);
+            }
 
             // Get command channel
             updateStatus("Connect command channel...", "status-disconnected");
@@ -249,6 +467,8 @@
 			isConnected = true;
             updateStatus("Connected", "status-connected");
             setUIState(true);
+            if (!txpHasFeedback) setTxpState("connected, no feedback from device (firmware has no TX power characteristic)", false);
+            else if (txpConfirmed === null) setTxpState("connected, waiting for device value...", false);
 
         } catch (error) {
             console.error("BLE Error:", error);
@@ -258,55 +478,186 @@
     });
 
     // Send text-based commands via web-bluetooth
-    async function sendCommand(commandText) {
+    async function sendCommand(commandText) 
+	{
         if (!cmdCharacteristic) return;
-        try {
-            const encoder = new TextEncoder();
+        try 
+		{
+            if (commandText == "TOGGLE_OLED")
+			{
+				if (oledIsOn) commandText = "OLED_OFF";
+				else commandText = "OLED_ON";
+			}
+			const encoder = new TextEncoder();
             await cmdCharacteristic.writeValue(encoder.encode(commandText));
             console.log("Command sent: " + commandText);
-        } catch (error) {
+        } 
+		catch (error) 
+		{
             console.error("Error during send:", error);
             alert("Command could not be sent. Check connection status!");
         }
     }
 
-    // Button events
-    command1Btn.addEventListener('click', () => sendCommand("Command 1"));
-    command2Btn.addEventListener('click', () => sendCommand("Command 2"));
+    // Command Button events
+    OLEDBtn.addEventListener('click', () => sendCommand("TOGGLE_OLED"));
+    //command2Btn.addEventListener('click', () => sendCommand("OLED_OFF"));
     
     setIntervalBtn.addEventListener('click', () => {
         const ms = intervalInput.value;
         if (ms >= 500) {
             sendCommand("INT_" + ms);
         } else {
-            alert("Das Intervall muss mindestens 500 ms betragen!");
+            alert("Minimum interval is 500 ms!");
         }
     });
 
+    //-----------------------------------------------------------------------------------------
+    // TX power spin-button + feedback
+    //-----------------------------------------------------------------------------------------
+    function fmtDbm(d) 
+	{
+        return (d > 0 ? "+" : "") + d + " dBm";
+    }
+
+    // Snap any entered value to the nearest valid hardware step
+    function txpSnap(v) 
+	{
+        if (isNaN(v)) v = 0;
+        let best = TXP_LEVELS[0];
+        for (const l of TXP_LEVELS) 
+		{
+            if (Math.abs(l - v) < Math.abs(best - v)) best = l;
+        }
+        return best;
+    }
+
+    function setTxpState(text, ok) 
+	{
+        txpStateTxt.textContent = text;
+        txpStateTxt.className = ok ? "fb-ok" : "fb-warn";
+    }
+
+    function refreshTxpFeedback() 
+	{
+        const sel = txpSnap(parseInt(txpInput.value, 10));
+        txpSelectedTxt.textContent = fmtDbm(sel);
+        if (!isConnected) return;
+        if (txpPending !== null) return;                       // "sending" message is showing
+        if (txpConfirmed === null) return;
+        if (sel === txpConfirmed) setTxpState("in effect on device", true);
+        else setTxpState("selected value not applied yet (press Apply)", false);
+    }
+
+    // - / + buttons: move one hardware step (3 dB) up or down
+    function txpStep(dir) 
+	{
+        let i = TXP_LEVELS.indexOf(txpSnap(parseInt(txpInput.value, 10))) + dir;
+        i = Math.min(Math.max(i, 0), TXP_LEVELS.length - 1);
+        txpInput.value = TXP_LEVELS[i];
+        refreshTxpFeedback();
+    }
+    txpDownBtn.addEventListener('click', () => txpStep(-1));
+    txpUpBtn.addEventListener('click', () => txpStep(+1));
+
+    txpInput.addEventListener('input', refreshTxpFeedback);
+    txpInput.addEventListener('change', () => {
+        txpInput.value = txpSnap(parseInt(txpInput.value, 10));
+        refreshTxpFeedback();
+    });
+    txpInput.addEventListener('keydown', (e) => { if (e.key === "Enter") txpApplyBtn.click(); });
+
+    txpApplyBtn.addEventListener('click', async () => {
+        const v = txpSnap(parseInt(txpInput.value, 10));
+        txpInput.value = v;
+        if (v <= -18 && !confirm(fmtDbm(v) + " is very low and may drop the connection. Continue?")) return;
+
+        txpPending = v;
+        setTxpState("sending " + fmtDbm(v) + "...", false);
+        await sendCommand("TXP_" + v);
+
+        clearTimeout(txpTimer);
+        if (txpHasFeedback) 
+		{
+            txpTimer = setTimeout(() => {
+                if (txpPending !== null) 
+				{
+                    setTxpState("no confirmation from device for " + fmtDbm(txpPending), false);
+                    txpPending = null;
+                }
+            }, 3000);
+        } 
+		else 
+		{
+            txpPending = null;
+            setTxpState("sent " + fmtDbm(v) + " (device does not report back)", false);
+        }
+    });
+
+    // Called when the ESP32 reports its current TX power (read or notification)
+    function onTxPowerReported(dbm) 
+	{
+        if (isNaN(dbm)) return;
+        txpConfirmed = dbm;
+        txpCurrentTxt.textContent = fmtDbm(dbm);
+        clearTimeout(txpTimer);
+        if (txpPending !== null && txpPending !== dbm) 
+		{
+            setTxpState("device reports " + fmtDbm(dbm) + " (requested " + fmtDbm(txpPending) + ")", false);
+        } 
+		else 
+		{
+            if (txpPending !== null || !txpInput.matches(":focus")) txpInput.value = dbm;
+            txpSelectedTxt.textContent = fmtDbm(dbm);
+            setTxpState("in effect on device", true);
+        }
+        txpPending = null;
+    }
+
     // Switch status display
-    function updateStatus(text, className) {
+    function updateStatus(text, className) 
+	{
         statusTxt.textContent = text;
         statusTxt.className = className;
     }
 
     // Toggle UI-elements
-    function setUIState(connected) {
-        command1Btn.disabled = !connected;
-        command2Btn.disabled = !connected;
+    function setUIState(connected) 
+	{
+        OLEDBtn.disabled = !connected;
+        //command2Btn.disabled = !connected;
         intervalInput.disabled = !connected;
         setIntervalBtn.disabled = !connected;
-        //connectBtn.disabled = connected;
-		if (connected) connectBtn.textContent = "Disconnect";
-		else connectBtn.textContent = "Connect";
+        txpInput.disabled = !connected;
+        txpApplyBtn.disabled = !connected;
+        txpDownBtn.disabled = !connected;
+        txpUpBtn.disabled = !connected;
+		if (connected) 
+		{
+			connectBtn.textContent = "Disconnect";
+			connectBtn.style.backgroundColor = "red";
+		}
+		else 
+		{
+			connectBtn.textContent = "Connect";
+			connectBtn.style.backgroundColor = "blue";
+		}
         
         if (!connected) {
             tempTxt.textContent = "-- °C";
             humTxt.textContent = "-- %";
+			timeTxt.textContent = "---";
+            txpConfirmed = null;
+            txpPending = null;
+            clearTimeout(txpTimer);
+            txpCurrentTxt.textContent = "unknown";
+            setTxpState("not connected", false);
         }
     }
 
     // Connection lost handler
-    function onDisconnected() {
+    function onDisconnected() 
+	{
         updateStatus("Connection lost!", "status-disconnected");
 		isConnected = false;
         setUIState(false);
