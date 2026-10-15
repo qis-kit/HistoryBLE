@@ -1,4 +1,10 @@
 <!DOCTYPE html>
+<!-- ------------------------------------------------------------------------- -->
+<!--                                                                           -->
+<!-- Control-app for History@IBM ESP32-based temperature and humidity tracker  -->
+<!-- IMPORTANT: This app only works with Chrome and Edge browsers !            -->
+<!--                                                                           -->
+<!-- ------------------------------------------------------------------------- -->
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -463,7 +469,7 @@
             updateStatus("Connect command channel...", "status-disconnected");
             cmdCharacteristic = await service.getCharacteristic(CMD_CHARACTERISTIC_UUID);
 
-            // Enable GUI for interaktion
+            // Enable GUI for interaction
 			isConnected = true;
             updateStatus("Connected", "status-connected");
             setUIState(true);
