@@ -436,7 +436,7 @@
             await cycleChar.startNotifications();
             cycleChar.addEventListener('characteristicvaluechanged', (event) => {
                 const value = new TextDecoder().decode(event.target.value);
-                cycleTxt.textContent = value + " ms";
+                cycleTxt.textContent = value;
             });
 			
 			// Subscribe to cycle setting channel
