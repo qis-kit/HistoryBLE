@@ -430,7 +430,7 @@
                 humTxt.textContent = value + " %";
             });
 			
-			// Subscribe to cycle measurment channel
+			// Subscribe to cycle measurement channel
             updateStatus("Connect cycle measurement channel...", "status-disconnected");
             const cycleChar = await service.getCharacteristic(CYCLE_CHARACTERISTIC_UUID);
             await cycleChar.startNotifications();
@@ -681,6 +681,7 @@
             tempTxt.textContent = "-- °C";
             humTxt.textContent = "-- %";
 			timeTxt.textContent = "---";
+			cycleTxt.textContent = "-- ms";
             txpConfirmed = null;
             txpPending = null;
             clearTimeout(txpTimer);
